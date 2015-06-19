@@ -59,6 +59,9 @@ class AntiModel(object):
 
         # fit the antimodel       
         self.antimodel.fit(df, p)  
+
+    def antimodel_coefs(self):
+        return self.antimodel.get_params()["logistic"].coef_[0]
             
     def guess(self, constraints):
         # get the antimodel parameters and calculate the gradient
