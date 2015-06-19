@@ -4,7 +4,7 @@ from zipfile import ZipFile
 from pandas import read_csv
 from sklearn.cross_validation import train_test_split
 
-DATA_ROOT = join(dirname(__file__), "..", "..", "data")
+DATA_ROOT = join(dirname(__file__), "..", "data")
 SOURCE_URL = ("https://archive.ics.uci.edu/ml/machine-learning-databases/"
               "spambase/spambase.zip")
 DATA_ARCHIVE = join(DATA_ROOT, "spambase.zip")
