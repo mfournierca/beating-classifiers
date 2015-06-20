@@ -23,6 +23,7 @@ def load_spambase(
         data_root=DATA_DIR,
         data_file="spambase.data",
         names_file="spambase.names"):
+    """Return a data frame containing all the spambase data"""
     names = []
     with open(join(data_root, names_file), "r") as f:
         for i, e in enumerate(f):
@@ -33,8 +34,13 @@ def load_spambase(
 
 
 def split_spambase(df, test_ratio=0.33, random_seed=1):
-    x = df[df.columns - ["spam"]]
+    """Return xtrain, xtest, ytrain, ytest"""
+    x = df[df.columns.difference(["spam"])]
     y = df["spam"]
     xtrain, xtest, ytrain, ytest = train_test_split(
         x, y, test_size=test_ratio, random_state=random_seed)
     return xtrain, xtest, ytrain, ytest
+
+
+def load_spambase_test_train():
+    return split_spambase(load_spambase())
