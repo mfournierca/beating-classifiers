@@ -1,7 +1,7 @@
 from urllib import urlretrieve
 from os.path import join, dirname
 from zipfile import ZipFile
-from pandas import read_csv
+from pandas import read_csv, Series
 from sklearn.cross_validation import train_test_split
 
 DATA_ROOT = join(dirname(__file__), "..", "data")
@@ -30,7 +30,9 @@ def load_spambase(
             if 32 < i < 90:
                 names.append(e[:e.index(":")])
     names.append("spam")
-    return read_csv(join(data_root, data_file), header=None, names=names)
+    df = read_csv(join(data_root, data_file), header=None, names=names)
+    df["constant_term"] = Series(1.0, index=df.index)
+    return df
 
 
 def split_spambase(df, test_ratio=0.33, random_seed=1):
