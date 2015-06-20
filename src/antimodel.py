@@ -6,7 +6,6 @@ from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
-from src import model
 from src import data
 
 
@@ -23,7 +22,7 @@ SPAMBASE_FEATURE_SPECS = [
 
 
 class AntiModel(object):
-    
+
     def __init__(self, m):
         """A class which attacks a given model, looking for misclassification
         errors. 
