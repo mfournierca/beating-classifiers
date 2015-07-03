@@ -11,10 +11,10 @@ from src import data
 
 # In the final version of this module we won't be tightly coupled to the 
 # features of the model that we are attacking. The decoupling would require
-# a bijection between feature vectors and objects (e.g. email messages) which
-# would make matching feature column names and order irrelevant. 
-# We don't have that bijection yet so we rely on our features having the
-# same order and names as the model we attack.
+# a invertible mapping between feature vectors and objects (e.g. email 
+# messages) which would make matching feature column names and order 
+# irrelevant. We don't have that mapping yet so we rely on our features 
+# having the same order and names as the model we attack.
 xtrain, xtest, ytrain, test = data.split_spambase()
 SPAMBASE_FEATURE_SPECS = [
     {
@@ -96,9 +96,8 @@ class AntiModel(object):
 
     def decision_gradient(self, x):
         """Return the gradient of the antimodel decision function evaluated at 
-        x. 
-
-        x must be the raw feature vector, ie not normalized or transformed."""
+        x. x must be the raw feature vector, ie not normalized or transformed.
+        """
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
         coefs = self.coefs()
         t = self._transform.transform(x)
