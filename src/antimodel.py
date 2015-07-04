@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from random import uniform, randint
+from scipy.optimize import minimize
 
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import StandardScaler
@@ -26,14 +27,24 @@ SPAMBASE_FEATURE_SPECS = [
     for c in xtrain.columns if c != "spam"
 ]
 
-# the constraints depend on the order of the feature specs
+# the constraints to pass onto the minimizer. 
+# depend on the order of the feature specs
 SPAMBASE_CONSTRAINTS = []
+
 assert xtrain.columns[0] == "capital_run_length_average"
 SPAMBASE_CONSTRAINTS.append({
     "name": "capital_run_length_average_gt_10",
     "type": "ineq",
     "fun": lambda x: x[0] - 10,
     "init": lambda x: x.__setitem__(0, randint(10, 25))
+})
+
+assert xtrain.columns[1] == "capital_run_length_longest"
+SPAMBASE_CONSTRAINTS.append({
+    "name": "capital_run_length_longest_gt_5",
+    "type": "ineq",
+    "fun": lambda x: x[1] - 5,
+    "init": lambda x: x.__setitem__(1, randint(5, 10))
 })
 
 
@@ -115,7 +126,16 @@ class AntiModel(object):
     def minimize_decision_function(self, constraints):
         """Minimize the decision function of the antimodel under constraints. 
         Return the feature vector which minimizes the function.""" 
-        pass
+        x = minimize(
+            self.decision_function, 
+            self.guess(constraints),
+            method="SLSQP",
+            jac=self.decision_gradient,
+            bounds=[(x["min"], x["max"]) for x in self.feature_specs],
+            constraints=constraints,
+            tol=0.001
+        )
+        return x
 
     def guess(self, constraints):
         """Take an initial guess at the feature vector under constraints"""
