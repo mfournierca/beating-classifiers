@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from random import uniform
+from random import uniform, randint
 
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import StandardScaler
@@ -15,7 +15,7 @@ from src import data
 # messages) which would make matching feature column names and order 
 # irrelevant. We don't have that mapping yet so we rely on our features 
 # having the same order and names as the model we attack.
-xtrain, xtest, ytrain, test = data.split_spambase()
+xtrain, xtest, ytrain, test = data.load_spambase_test_train()
 SPAMBASE_FEATURE_SPECS = [
     {
         "name": c,
@@ -31,33 +31,20 @@ SPAMBASE_CONSTRAINTS = []
 assert xtrain.columns[0] == "capital_run_length_average"
 SPAMBASE_CONSTRAINTS.append({
     "name": "capital_run_length_average_gt_10",
-    "type": "ineq", 
-    "fun": lambda x: x[0] - 10
+    "type": "ineq",
+    "fun": lambda x: x[0] - 10,
+    "init": lambda x: x.__setitem__(0, randint(10, 25))
 })
 
 
 class AntiModel(object):
 
-    def __init__(self, m):
+    def __init__(self, m, feature_specs=SPAMBASE_FEATURE_SPECS):
         """A class which attacks a given model, looking for misclassification
-        errors. 
+        errors.
 
-        :param model: an sklearn model which is already trained
-        :type model: object
-        """
-        self.model = m
-        self._transform = FeatureUnion([("scaler", StandardScaler())])
-        self.antimodel = Pipeline(
-            steps=[
-                ("transform", self._transform), 
-                ("logistic", LogisticRegression())
-            ]
-        ) 
-        self.prepare()
-
-    def prepare(self, num_points=10000, feature_specs=SPAMBASE_FEATURE_SPECS):
-        """Prepare the anti model. 
-
+        :param m: an sklearn model which is already trained
+        :type m: object
         :param feature_specs: Specifications for the features that the
             antimodel will use. Must be a list of dictionaries of the form:
             {
@@ -68,12 +55,29 @@ class AntiModel(object):
             }
         :type feature_specs: list
         """
-    
+        self.model = m
+        self.feature_specs = feature_specs 
+        self._transform = FeatureUnion([("scaler", StandardScaler())])
+        self.antimodel = Pipeline(
+            steps=[
+                ("transform", self._transform), 
+                ("logistic", LogisticRegression())
+            ]
+        ) 
+        self.prepare()
+
+    def prepare(self, num_points=10000):
+        """Prepare the anti model. 
+
+        :param num_points: the number of points used to train the antimodel
+        :type num_points: int
+        """
+   
         # generate an initial set of random feature vectors
         rows = [
             {
                 c["name"]: c["type"](uniform(c["min"], c["max"])) 
-                for c in feature_specs
+                for c in self.feature_specs
             }
             for i in range(num_points)
         ]
@@ -114,12 +118,13 @@ class AntiModel(object):
         pass
 
     def guess(self, constraints):
-        # get the antimodel parameters and calculate the gradient
-        # minimize the gradient under constraints
-        # get the resulting feature vector
-        # predict and add to our training set
-        # return the feature vector
-        pass
+        """Take an initial guess at the feature vector under constraints"""
+        r = [
+            f["type"](uniform(f["min"], f["max"])) for f in self.feature_specs 
+        ]
+        for c in constraints:
+            c["init"](r)
+        return np.array(r)
 
     def run():
         pass
