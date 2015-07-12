@@ -40,7 +40,7 @@ class AntiClassifier(object):
         self.prepare()
 
     def prepare(self, num_points=10000):
-        """Prepare the anti model. 
+        """Prepare the anticlassifier.
 
         :param num_points: the number of points used to train the anticlassfier
         :type num_points: int
@@ -56,10 +56,10 @@ class AntiClassifier(object):
         ]
         df = pd.DataFrame(rows)
 
-        # feed to the model to build a training set
+        # feed to the classifier to build a training set
         p = self.classifier.predict(df)
 
-        # fit the antimodel       
+        # fit the anticlassifier       
         self.anticlassifier.fit(df, p)  
 
     def coefs(self):
@@ -87,8 +87,8 @@ class AntiClassifier(object):
         return np.array(g)
 
     def minimize_decision_function(self, constraints):
-        """Minimize the decision function of the antimodel under constraints. 
-        Return the feature vector which minimizes the function.""" 
+        """Find the feature vector which minimizes the decision function of the 
+        anticlassifier under constraints. Return this feature vector. """
 
         # the constraints are expressed as boundaries, not values
         # we're minimizing within a region

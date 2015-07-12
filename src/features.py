@@ -4,11 +4,11 @@ from src import data
 
 
 # In the final version of this module we won't be tightly coupled to the 
-# features of the model that we are attacking. The decoupling would require
+# features of the classifier that we are attacking. The decoupling would require
 # a invertible mapping between feature vectors and objects (e.g. email 
 # messages) which would make matching feature column names and order 
 # irrelevant. We don't have that mapping yet so we rely on our features 
-# having the same order and names as the model we attack.
+# having the same order and names as the classifier we attack.
 xtrain, xtest, ytrain, test = data.load_spambase_test_train()
 SPAMBASE_FEATURE_SPECS = [
     {
