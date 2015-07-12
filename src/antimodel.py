@@ -126,6 +126,9 @@ class AntiModel(object):
     def minimize_decision_function(self, constraints):
         """Minimize the decision function of the antimodel under constraints. 
         Return the feature vector which minimizes the function.""" 
+
+        # should be faster to do this with lagrange multipliers
+
         x = minimize(
             self.decision_function, 
             self.guess(constraints),
