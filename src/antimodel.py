@@ -127,8 +127,9 @@ class AntiModel(object):
         """Minimize the decision function of the antimodel under constraints. 
         Return the feature vector which minimizes the function.""" 
 
-        # should be faster to do this with lagrange multipliers
-
+        # the constraints are expressed as boundaries, not values. We're 
+        # searching for a minimum within a region, not a point on a line
+        
         x = minimize(
             self.decision_function, 
             self.guess(constraints),
