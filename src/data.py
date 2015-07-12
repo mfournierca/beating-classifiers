@@ -31,7 +31,6 @@ def load_spambase(
                 names.append(e[:e.index(":")])
     names.append("spam")
     df = read_csv(join(data_root, data_file), header=None, names=names)
-    df["constant_term"] = Series(1.0, index=df.index)
     return df
 
 

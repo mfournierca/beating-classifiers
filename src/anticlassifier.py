@@ -34,7 +34,7 @@ class AntiClassifier(object):
         self.anticlassifier = Pipeline(
             steps=[
                 ("transform", self._transform), 
-                ("logistic", LogisticRegression())
+                ("logistic", LogisticRegression(fit_intercept=True))
             ]
         ) 
         if prepare:
