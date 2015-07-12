@@ -1,6 +1,8 @@
 from unittest import TestCase
 from mock import patch, MagicMock
-from ..src import anticlassifier
+import numpy as np
+
+from src import anticlassifier
 
 TEST_FEATURE_SPECS = [
     {
@@ -23,19 +25,47 @@ TEST_CONSTRAINTS = [
 
 
 class _TestClassifier(object):
-    
-    def predict(self, x):
-        return int(x > 0)
+
+    def predict(self, df):
+        # only one dim matters for the test classifier
+        r = [int(x[1][0] > 0) for x in df.iterrows()]
+        return r
 
 
 class TestAntiClassifier(TestCase):
-    pass
-    
-    def setUp(self):
-        self.a = anticlassifier.AntiClassifier(
-            _TestClassifier(), TEST_FEATURE_SPECS
-        )
- 
-    def test_prepare(self):
+
+    def runTest(self):
         pass
+
+    def setUp(self):
+        self.feature_specs = TEST_FEATURE_SPECS
+        self.a = anticlassifier.AntiClassifier(
+            _TestClassifier(), self.feature_specs
+        )
+
+    def test_prepare_anticlassifier(self):
+        self.a.prepare(num_points=1000)
+        # should not raise an error
+        self.a.anticlassifier.predict(
+            np.array([0 for i in range(len(self.feature_specs))])
+        )
+
+    def test_coefs_created(self):
+        self.assertTrue(self.a.coefs)
+
+    def test_decision_function_value(self):
+        self.assertGreater(
+            self.a.decision_function(
+                np.array([0 for i in range(len(self.feature_specs))])
+            ),
+            0.0
+        )
+
+    def test_decision_gradient_value(self):
+        self.assertGreater(
+            self.a.decision_gradient(
+                np.array([0 for i in range(len(self.feature_specs))])
+            ),
+            0.0
+        )
 

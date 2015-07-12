@@ -10,7 +10,7 @@ from sklearn.linear_model import LogisticRegression
 
 class AntiClassifier(object):
 
-    def __init__(self, classifier, feature_specs):
+    def __init__(self, classifier, feature_specs, prepare=True):
         """A machine which attacks a given classifier, looking for 
         misclassification errors.
         
@@ -37,7 +37,8 @@ class AntiClassifier(object):
                 ("logistic", LogisticRegression())
             ]
         ) 
-        self.prepare()
+        if prepare:
+            self.prepare()
 
     def prepare(self, num_points=10000):
         """Prepare the anticlassifier.
@@ -69,7 +70,7 @@ class AntiClassifier(object):
     def decision_function(self, x):
         """Return the decision function of the anticlassifier evaluated at x"""
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
-        return self.anticlassifier.decision_function(x)
+        return self.anticlassifier.predict_proba(x)[0][0]
 
     def decision_gradient(self, x):
         """Return the gradient of the anticlassifier decision function 
