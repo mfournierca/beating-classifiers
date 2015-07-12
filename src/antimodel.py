@@ -128,7 +128,9 @@ class AntiModel(object):
         Return the feature vector which minimizes the function.""" 
 
         # should be faster to do this with lagrange multipliers
-
+        # the sigmoid function is monotonic and continously diffable
+        # we should be able to model it as a linear function to simplify the
+        # calculation
         x = minimize(
             self.decision_function, 
             self.guess(constraints),
