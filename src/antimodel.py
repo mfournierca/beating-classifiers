@@ -7,18 +7,19 @@ from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
-from src.features import SPAMBASE_FEATURE_SPECS, SPAMBASE_CONSTRAINTS
 
-class AntiModel(object):
+class AntiClassifier(object):
 
-    def __init__(self, m, feature_specs=SPAMBASE_FEATURE_SPECS):
-        """A class which attacks a given model, looking for misclassification
-        errors.
-
-        :param m: an sklearn model which is already trained
+    def __init__(self, classifier, feature_specs):
+        """A machine which attacks a given classifier, looking for 
+        misclassification errors.
+        
+        :param classifier: an sklearn classifier which is already trained. 
+            The predict() method must work.
         :type m: object
         :param feature_specs: Specifications for the features that the
-            antimodel will use. Must be a list of dictionaries of the form:
+            anti-classifier will use. Must be a list of dictionaries of the 
+            form:
             {
                 "name": string
                 "type": float or int
@@ -27,10 +28,10 @@ class AntiModel(object):
             }
         :type feature_specs: list
         """
-        self.model = m
+        self.classifier = classifier
         self.feature_specs = feature_specs 
         self._transform = FeatureUnion([("scaler", StandardScaler())])
-        self.antimodel = Pipeline(
+        self.anticlassifier = Pipeline(
             steps=[
                 ("transform", self._transform), 
                 ("logistic", LogisticRegression())
@@ -41,7 +42,7 @@ class AntiModel(object):
     def prepare(self, num_points=10000):
         """Prepare the anti model. 
 
-        :param num_points: the number of points used to train the antimodel
+        :param num_points: the number of points used to train the anticlassfier
         :type num_points: int
         """
    
@@ -56,23 +57,24 @@ class AntiModel(object):
         df = pd.DataFrame(rows)
 
         # feed to the model to build a training set
-        p = self.model.predict(df)
+        p = self.classifier.predict(df)
 
         # fit the antimodel       
-        self.antimodel.fit(df, p)  
+        self.anticlassifier.fit(df, p)  
 
     def coefs(self):
-        """Get the coefficients of the antimodel's decision function"""
-        return self.antimodel.get_params()["logistic"].coef_[0]
+        """Get the coefficients of the anticlassifier's decision function"""
+        return self.anticlassifier.get_params()["logistic"].coef_[0]
 
     def decision_function(self, x):
-        """Return the decision function of the anti model evaluated at x."""
+        """Return the decision function of the anticlassifier evaluated at x"""
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
-        return self.antimodel.decision_function(x)
+        return self.anticlassifier.decision_function(x)
 
     def decision_gradient(self, x):
-        """Return the gradient of the antimodel decision function evaluated at 
-        x. x must be the raw feature vector, ie not normalized or transformed.
+        """Return the gradient of the anticlassifier decision function 
+        evaluated at x. x must be the raw feature vector, ie not normalized or 
+        transformed.
         """
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
         coefs = self.coefs()
@@ -88,9 +90,9 @@ class AntiModel(object):
         """Minimize the decision function of the antimodel under constraints. 
         Return the feature vector which minimizes the function.""" 
 
-        # the constraints are expressed as boundaries, not values. We're 
-        # searching for a minimum within a region, not a point on a line
-        
+        # the constraints are expressed as boundaries, not values
+        # we're minimizing within a region
+ 
         x = minimize(
             self.decision_function, 
             self.guess(constraints),
@@ -103,7 +105,7 @@ class AntiModel(object):
         return x
 
     def guess(self, constraints):
-        """Take an initial guess at the feature vector under constraints"""
+        """Take an initial guess at the a feature vector under constraints"""
         r = [
             f["type"](uniform(f["min"], f["max"])) for f in self.feature_specs 
         ]
