@@ -10,6 +10,12 @@ TEST_FEATURE_SPECS = [
         "type": float,
         "max": 1.0,
         "min": -1.0
+    },
+    {
+        "name": "test_var_2",
+        "type": float,
+        "max": 1.0,
+        "min": -1.0
     }
 ]
 
@@ -44,28 +50,31 @@ class TestAntiClassifier(TestCase):
         )
 
     def test_prepare_anticlassifier(self):
-        self.a.prepare(num_points=1000)
         # should not raise an error
         self.a.anticlassifier.predict(
             np.array([0 for i in range(len(self.feature_specs))])
         )
 
+    def test_classes(self):
+        self.assertEqual(list(self.a.classes()), [0, 1])
+
     def test_coefs_created(self):
         self.assertTrue(self.a.coefs)
 
     def test_decision_function_value(self):
-        self.assertGreater(
-            self.a.decision_function(
-                np.array([0 for i in range(len(self.feature_specs))])
-            ),
-            0.0
-        )
-
+        features = np.array([0 for i in range(len(self.feature_specs))])
+        v = self.a.decision_function(features)
+        e = 1.0 / (1.0 + np.exp(-1.0 * self.a.coefs().dot(features)))
+   
+        print(self.a.coefs())
+         
+        self.assertGreater(v, 0.0, "value must be greater than 0")
+        self.assertLess(v, 1.0, "value must be less than 1")
+        self.assertEqual(v, e, "value != sigmoid output: {0} != {1}".format(
+            v, e))
+    
     def test_decision_gradient_value(self):
-        self.assertGreater(
-            self.a.decision_gradient(
-                np.array([0 for i in range(len(self.feature_specs))])
-            ),
-            0.0
-        )
+        features = np.array([0 for i in range(len(self.feature_specs))])
+        v = self.a.decision_gradient(features)
+        self.assertGreater(v.all(), 0.0)
 

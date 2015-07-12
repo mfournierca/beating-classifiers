@@ -67,6 +67,10 @@ class AntiClassifier(object):
         """Get the coefficients of the anticlassifier's decision function"""
         return self.anticlassifier.get_params()["logistic"].coef_[0]
 
+    def classes(self):
+        """Get the class labels of the anticlassifier"""
+        return self.anticlassifier.get_params()["logistic"].classes_
+
     def decision_function(self, x):
         """Return the decision function of the anticlassifier evaluated at x"""
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
