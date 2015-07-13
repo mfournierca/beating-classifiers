@@ -49,32 +49,48 @@ class TestAntiClassifier(TestCase):
             _TestClassifier(), self.feature_specs
         )
 
-    def test_prepare_anticlassifier(self):
+    def test_prepare(self):
         # should not raise an error
         self.a.anticlassifier.predict(
             np.array([0 for i in range(len(self.feature_specs))])
         )
 
-    def test_classes(self):
-        self.assertEqual(list(self.a.classes()), [0, 1])
+    def test_logistic_classes(self):
+        self.assertEqual(list(self.a.logistic_classes()), [0, 1])
 
-    def test_coefs_created(self):
-        self.assertTrue(self.a.coefs)
+    def test_logistic_coefs(self):
+        self.assertTrue(self.a.logistic_coefs().all())
+    
+    def test_logistic_intercept(self):
+        i = self.a.logistic_intercept()
+        self.assertTrue(i)
+        self.assertGreater(i, 0)
 
-    def test_decision_function_value(self):
+    def test_logistic_predict_proba(self):
         features = np.array([0 for i in range(len(self.feature_specs))])
-        v = self.a.decision_function(features)
-        e = 1.0 / (1.0 + np.exp(-1.0 * self.a.coefs().dot(features)))
-   
-        print(self.a.coefs())
-         
+        v = self.a.logistic_predict_proba(features)
+        c = self.a.logistic_coefs()
+        i = self.a.logistic_intercept()
+        e = 1.0 / (1.0 + np.exp(-1.0 * (i + c.dot(features))))
+    
         self.assertGreater(v, 0.0, "value must be greater than 0")
         self.assertLess(v, 1.0, "value must be less than 1")
         self.assertEqual(v, e, "value != sigmoid output: {0} != {1}".format(
             v, e))
     
-    def test_decision_gradient_value(self):
-        features = np.array([0 for i in range(len(self.feature_specs))])
-        v = self.a.decision_gradient(features)
+    def test_logistic_predict_proba_gradient(self):
+        f = np.array([0 for i in range(len(self.feature_specs))])
+ 
+        v = self.a.logistic_predict_proba_gradient(f)
         self.assertGreater(v.all(), 0.0)
 
+        fd = f[:]
+        fd[0] = fd[0] + 0.0001
+        a = self.a.logistic_predict_proba(fd) - self.a.logistic_predict_proba(f)
+       
+        print(f)
+        print(fd)
+        print(v)
+        print(a) 
+        
+        raise ValueError()
