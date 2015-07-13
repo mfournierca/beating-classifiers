@@ -64,7 +64,8 @@ class TestAntiClassifier(TestCase):
     def test_lg_intercept(self):
         i = self.a.lg_intercept()
         self.assertTrue(i)
-        self.assertGreater(i, 0)
+        self.assertGreater(i, -1)
+        self.assertLess(i, 1)
 
     def test_lg_predict_proba(self):
         features = np.array([0 for i in range(len(self.feature_specs))])
