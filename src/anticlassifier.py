@@ -66,6 +66,9 @@ class AntiClassifier(object):
         """Get the coefficients of the anticlassifier's decision function."""
         return self.anticlassifier.get_params()["logistic"].coef_[0]
 
+    def intercept(self): 
+        return self.anticlassifier.get_params()["logistic"].intercept_
+
     def classes(self):
         """Get the class labels of the anticlassifier."""
         return self.anticlassifier.get_params()["logistic"].classes_
@@ -86,9 +89,13 @@ class AntiClassifier(object):
         """
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
         coefs = self.coefs()
+        inter = self.intercept()
         g = [
             # the sigmoid partial derivative
-            (c * np.exp(t.dot(coefs))) / ((1.0 + np.exp(t.dot(coefs)))**2.0)
+            (
+                (c * np.exp(inter + x.dot(coefs))) / 
+                ((1.0 + np.exp(inter + x.dot(coefs)))**2.0)
+            )
             for c in coefs
         ]
         return np.array(g)
