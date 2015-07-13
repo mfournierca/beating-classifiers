@@ -66,22 +66,22 @@ class AntiClassifier(object):
         # fit the anticlassifier       
         self.anticlassifier.fit(df, p)  
 
-    def logistic_coefs(self):
+    def lg_coefs(self):
         """Get the coefficients of the logisitical regression classifier used
         by the anticlassifier."""
         return self.anticlassifier.get_params()["logistic"].coef_[0]
 
-    def logistic_intercept(self): 
+    def lg_intercept(self): 
         """Get the intercept term of the logisitical regression classifier used
         by the anticlassifier."""
         return self.anticlassifier.get_params()["logistic"].intercept_
 
-    def logistic_classes(self):
+    def lg_classes(self):
         """Get the class labels of the logisitical regression classifier 
         used by the anticlassifier."""
         return self.anticlassifier.get_params()["logistic"].classes_
 
-    def logistic_predict_proba(self, x):
+    def lg_predict_proba(self, x):
         """Return the predict_proba method evaluated at x of the logistical 
         regression classifier used by the anticlassifier.
          
@@ -91,15 +91,15 @@ class AntiClassifier(object):
         l = self.anticlassifier.get_params()["logistic"]
         return l.predict_proba(x)[0][1]
 
-    def logistic_predict_proba_gradient(self, x):
+    def lg_predict_proba_gradient(self, x):
         """Return the gradient evaluated at x of the logistic regression 
         classifier used by the anticlassifier. 
         
         x is not normalized or transformed before computing the gradient. 
         """
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
-        coefs = self.logistic_coefs()
-        inter = self.logistic_intercept()
+        coefs = self.lg_coefs()
+        inter = self.lg_intercept()
         g = [
             # the sigmoid partial derivative
             (
@@ -123,10 +123,10 @@ class AntiClassifier(object):
         # we're minimizing within a region
  
         x = minimize(
-            self.logistic_predict_proba, 
+            self.lg_predict_proba, 
             self._transform.transform(self.guess(constraints)),
             method="SLSQP",
-            jac=self.logistic_predict_proba_gradient,
+            jac=self.lg_predict_proba_gradient,
             bounds=[(x["min"], x["max"]) for x in self.feature_specs],
             constraints=constraints,
             tol=0.001
