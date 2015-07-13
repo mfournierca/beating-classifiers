@@ -1,6 +1,7 @@
 from unittest import TestCase
 from mock import patch, MagicMock
 import numpy as np
+import copy
 
 from src import anticlassifier
 
@@ -68,7 +69,7 @@ class TestAntiClassifier(TestCase):
         self.assertLess(i, 1)
 
     def test_lg_predict_proba(self):
-        features = np.array([0 for i in range(len(self.feature_specs))])
+        features = np.array([0.0 for i in range(len(self.feature_specs))])
         v = self.a.lg_predict_proba(features)
         c = self.a.lg_coefs()
         i = self.a.lg_intercept()
@@ -80,18 +81,23 @@ class TestAntiClassifier(TestCase):
             v, e))
     
     def test_lg_predict_proba_gradient(self):
-        f = np.array([0 for i in range(len(self.feature_specs))])
- 
+        f = np.array([0.0 for i in range(len(self.feature_specs))])
+        
+        # sanity check gradient 
         v = self.a.lg_predict_proba_gradient(f)
         self.assertGreater(v.all(), 0.0)
-
-        fd = f[:]
-        fd[0] = fd[0] + 0.0001
-        a = self.a.lg_predict_proba(fd) - self.a.lg_predict_proba(f)
-       
-        print(f)
-        print(fd)
-        print(v)
-        print(a) 
         
-        raise ValueError()
+        # check approximate gradient
+        h = 0.0001
+        m = np.array([f[0] + h, f[1]])
+        n = np.array([f[0], f[1] + h])
+        a = np.array([
+            [(self.a.lg_predict_proba(m) - self.a.lg_predict_proba(f)) / h],
+            [(self.a.lg_predict_proba(n) - self.a.lg_predict_proba(f)) / h]
+        ])
+        
+        r = v - a
+        self.assertTrue(
+            (np.abs(r) < np.array([0.001, 0.001])).all(),
+            "approximate gradient not accurate enough, diff: {0}".format(r)
+        )
