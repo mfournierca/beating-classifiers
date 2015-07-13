@@ -13,7 +13,11 @@ class AntiClassifier(object):
     def __init__(self, classifier, feature_specs, prepare=True):
         """A machine which attacks a given classifier, looking for 
         misclassification errors.
-        
+       
+        Internally this class uses an sklearn pipeline to transform data and 
+        a logistical regression classifier to model the behaviour of the 
+        classifiern under attack. 
+ 
         :param classifier: an sklearn classifier which is already trained. 
             The predict() method must work.
         :type m: object
@@ -62,34 +66,40 @@ class AntiClassifier(object):
         # fit the anticlassifier       
         self.anticlassifier.fit(df, p)  
 
-    def coefs(self):
-        """Get the coefficients of the anticlassifier's decision function."""
+    def logistic_coefs(self):
+        """Get the coefficients of the logisitical regression classifier used
+        by the anticlassifier."""
         return self.anticlassifier.get_params()["logistic"].coef_[0]
 
-    def intercept(self): 
+    def logistic_intercept(self): 
+        """Get the intercept term of the logisitical regression classifier used
+        by the anticlassifier."""
         return self.anticlassifier.get_params()["logistic"].intercept_
 
-    def classes(self):
-        """Get the class labels of the anticlassifier."""
+    def logistic_classes(self):
+        """Get the class labels of the logisitical regression classifier 
+        used by the anticlassifier."""
         return self.anticlassifier.get_params()["logistic"].classes_
 
-    def predict_proba(self, x):
-        """Return the decision function of the anticlassifier evaluated at x.
+    def logistic_predict_proba(self, x):
+        """Return the predict_proba method evaluated at x of the logistical 
+        regression classifier used by the anticlassifier.
          
-        x is not normalized or transformed before computing the gradient. 
+        x is not normalized or transformed before computing the function. 
         """
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
-        return self.anticlassifier.predict_proba(x)[0][0]
+        l = self.anticlassifier.get_params()["logistic"]
+        return l.predict_proba(x)[0][1]
 
-    def predict_proba_gradient(self, x):
-        """Return the gradient of the anticlassifier decision function 
-        evaluated at x. 
+    def logistic_predict_proba_gradient(self, x):
+        """Return the gradient evaluated at x of the logistic regression 
+        classifier used by the anticlassifier. 
         
         x is not normalized or transformed before computing the gradient. 
         """
         assert isinstance(x, np.ndarray), "x must be a numpy ndarray"
-        coefs = self.coefs()
-        inter = self.intercept()
+        coefs = self.logistic_coefs()
+        inter = self.logistic_intercept()
         g = [
             # the sigmoid partial derivative
             (
@@ -100,7 +110,7 @@ class AntiClassifier(object):
         ]
         return np.array(g)
 
-    def minimize_predict_proba(self, constraints):
+    def minimize(self, constraints):
         """Find the feature vector which minimizes the decision function of the 
         anticlassifier under constraints. Return this feature vector. 
 
@@ -113,10 +123,10 @@ class AntiClassifier(object):
         # we're minimizing within a region
  
         x = minimize(
-            self.predict_proba, 
+            self.logistic_predict_proba, 
             self._transform.transform(self.guess(constraints)),
             method="SLSQP",
-            jac=self.predict_proba_gradient,
+            jac=self.logistic_predict_proba_gradient,
             bounds=[(x["min"], x["max"]) for x in self.feature_specs],
             constraints=constraints,
             tol=0.001
