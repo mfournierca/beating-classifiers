@@ -20,7 +20,7 @@ TEST_FEATURE_SPECS = [
     }
 ]
 
-TEST_VAR_1_INIT = 0.5
+TEST_VAR_1_INIT = 0.25
 TEST_CONSTRAINTS = [
     {
         "name": "test_var_1_gt_0",
@@ -79,14 +79,14 @@ class TestAntiClassifier(TestCase):
         self.assertLess(v, 1.0, "value must be less than 1")
         self.assertEqual(v, e, "value != sigmoid output: {0} != {1}".format(
             v, e))
-    
+   
     def test_lg_predict_proba_gradient(self):
         f = np.array([0.0 for i in range(len(self.feature_specs))])
-        
+       
         # sanity check gradient 
         v = self.a.lg_predict_proba_gradient(f)
         self.assertGreater(v.all(), 0.0)
-        
+       
         # check approximate gradient
         h = 0.0001
         m = np.array([f[0] + h, f[1]])
@@ -101,3 +101,7 @@ class TestAntiClassifier(TestCase):
             (np.abs(r) < np.array([0.001, 0.001])).all(),
             "approximate gradient not accurate enough, diff: {0}".format(r)
         )
+
+    def test_minimize(self): 
+        pass
+
