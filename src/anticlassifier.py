@@ -9,6 +9,11 @@ from sklearn.linear_model import LogisticRegression
 
 
 class AntiClassifier(object):
+   
+    xtrain = None 
+    ytrain = None
+    new_train = []
+    retrain_interval = 100
 
     def __init__(self, classifier, feature_specs, prepare=True):
         """A machine which attacks a given classifier, looking for 
@@ -47,9 +52,13 @@ class AntiClassifier(object):
     def prepare(self, num_points=10000):
         """Prepare the anticlassifier.
 
+        Randomly generate a new test set of feature vectors and pass it to the
+        classifier. Use the output as the labels to train the anticlassifier.
+
         :param num_points: the number of points used to train the anticlassfier
         :type num_points: int
         """   
+        
         # generate an initial set of random feature vectors
         rows = [
             {
@@ -58,13 +67,22 @@ class AntiClassifier(object):
             }
             for i in range(num_points)
         ]
-        df = pd.DataFrame(rows)
+        self.xtrain = pd.DataFrame(rows)
 
         # feed to the classifier to build a training set
-        p = self.classifier.predict(df)
-
+        self.ytrain = self.classifier.predict(self.xtrain)
+        
         # fit the anticlassifier       
-        self.anticlassifier.fit(df, p)  
+        self.anticlassifier.fit(self.xtrain, self.ytrain)  
+
+    def retrain(self):
+        """Retrain the anticlassifier using the guesses that it generated""" 
+        x = pd.DataFrame(self.new_rows)          
+        y = self.classifier.predict(x)
+        self.xtrain = self.xtrain.append(x, ignore_index=True)
+        self.ytrain = self.ytrain.append(y, ignore_index=True)
+        self.anticlassifier.fit(self.xtrain, self.ytrain)
+        self.new_rows = []
 
     def lg_coefs(self):
         """Get the coefficients of the logisitical regression classifier used
@@ -142,5 +160,15 @@ class AntiClassifier(object):
             c["init"](r)
         return np.array(r)
 
-    def run():
-        pass
+    def get(self, constraints):
+        """Get a feature vector which satisfies the constraints and which we
+        expect to be accepted by the classifier. 
+
+        Also retrain the classifier if enough feature vectors have been 
+        generated. """
+        v = self.minimize(constraints)
+        self.new_train.append(v)
+        if len(self.new_train) >= self.retrain_interval:
+            self.retrain()
+        return v            
+
