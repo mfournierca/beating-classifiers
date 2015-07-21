@@ -161,8 +161,8 @@ class AntiClassifier(object):
         return np.array(r)
 
     def get(self, constraints):
-        """Get a feature vector which satisfies the constraints and which we
-        expect to be accepted by the classifier. 
+        """Get a feature vector which satisfies the constraints and which the
+        classifier is expected to accept.
 
         Also retrain the classifier if enough feature vectors have been 
         generated. """
