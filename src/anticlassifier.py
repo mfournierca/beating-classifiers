@@ -3,7 +3,7 @@ import pandas as pd
 from random import uniform
 from scipy.optimize import minimize
 
-from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
@@ -39,7 +39,7 @@ class AntiClassifier(object):
         """
         self.classifier = classifier
         self.feature_specs = feature_specs 
-        self._transform = FeatureUnion([("scaler", StandardScaler())])
+        self._transform = Pipeline(steps=[("scaler", StandardScaler())])
         self.anticlassifier = Pipeline(
             steps=[
                 ("transform", self._transform), 
@@ -140,7 +140,7 @@ class AntiClassifier(object):
         # the constraints are expressed as boundaries, not values
         # we're minimizing within a region
  
-        x = minimize(
+        result = minimize(
             self.lg_predict_proba, 
             self._transform.transform(self.guess(constraints)),
             method="SLSQP",
@@ -149,7 +149,7 @@ class AntiClassifier(object):
             constraints=constraints,
             tol=0.001
         )
-        return self._transform.inverse_transform(x)
+        return self._transform.inverse_transform(result.x)
 
     def guess(self, constraints):
         """Take an initial guess at the a feature vector under constraints"""
