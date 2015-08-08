@@ -1,3 +1,5 @@
+"""Import this module to automatically prepare data and classifiers"""
+
 import data
 import classifier
 
