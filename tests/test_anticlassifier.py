@@ -51,57 +51,57 @@ class TestAntiClassifier(TestCase):
         )
 
     def test_prepare(self):
-        # should not raise an error
+        # if self.a.prepare() was run, this should not raise an error
         self.a.anticlassifier.predict(
             np.array([0 for i in range(len(self.feature_specs))])
         )
 
     def test_lg_classes(self):
-        self.assertEqual(list(self.a.lg_classes()), [0, 1])
+        self.assertEqual(list(self.a._lg_classes()), [0, 1])
 
     def test_lg_coefs(self):
-        self.assertTrue(self.a.lg_coefs().all())
-    
+        self.assertTrue(self.a._lg_coefs().all())
+
     def test_lg_intercept(self):
-        i = self.a.lg_intercept()
+        i = self.a._lg_intercept()
         self.assertTrue(i)
         self.assertGreater(i, -1)
         self.assertLess(i, 1)
 
     def test_lg_predict_proba(self):
         features = np.array([0.0 for i in range(len(self.feature_specs))])
-        v = self.a.lg_predict_proba(features)
-        c = self.a.lg_coefs()
-        i = self.a.lg_intercept()
+        v = self.a._lg_predict_proba(features)
+        c = self.a._lg_coefs()
+        i = self.a._lg_intercept()
         e = 1.0 / (1.0 + np.exp(-1.0 * (i + c.dot(features))))
-    
+
         self.assertGreater(v, 0.0, "value must be greater than 0")
         self.assertLess(v, 1.0, "value must be less than 1")
         self.assertEqual(v, e, "value != sigmoid output: {0} != {1}".format(
             v, e))
-   
+
     def test_lg_predict_proba_gradient(self):
         f = np.array([0.0 for i in range(len(self.feature_specs))])
-       
-        # sanity check gradient 
-        v = self.a.lg_predict_proba_gradient(f)
+
+        # sanity check gradient
+        v = self.a._lg_predict_proba_gradient(f)
         self.assertGreater(v.all(), 0.0)
-       
+
         # check approximate gradient
         h = 0.0001
         m = np.array([f[0] + h, f[1]])
         n = np.array([f[0], f[1] + h])
         a = np.array([
-            [(self.a.lg_predict_proba(m) - self.a.lg_predict_proba(f)) / h],
-            [(self.a.lg_predict_proba(n) - self.a.lg_predict_proba(f)) / h]
+            [(self.a._lg_predict_proba(m) - self.a._lg_predict_proba(f)) / h],
+            [(self.a._lg_predict_proba(n) - self.a._lg_predict_proba(f)) / h]
         ])
-        
+
         r = v - a
         self.assertTrue(
             (np.abs(r) < np.array([0.001, 0.001])).all(),
             "approximate gradient not accurate enough, diff: {0}".format(r)
         )
 
-    def test_minimize(self): 
+    def test_minimize(self):
         pass
 
