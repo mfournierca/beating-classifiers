@@ -16,7 +16,13 @@ class AntiClassifier(object):
     new_rows = None
     retrain_interval = 100
 
-    def __init__(self, classifier, feature_specs, prepare=True):
+    def __init__(
+            self,
+            classifier,
+            feature_specs,
+            prepare=True,
+            num_points=10000
+        ):
         """A machine which attacks a given classifier, looking for
         misclassification errors.
 
@@ -48,7 +54,7 @@ class AntiClassifier(object):
             ]
         )
         if prepare:
-            self.prepare()
+            self.prepare(num_points=num_points)
 
     def prepare(self, num_points=10000):
         """Prepare the anticlassifier.
