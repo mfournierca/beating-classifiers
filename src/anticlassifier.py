@@ -13,7 +13,7 @@ class AntiClassifier(object):
 
     xtrain = None
     ytrain = None
-    new_rows = []
+    new_rows = None
     retrain_interval = 100
 
     def __init__(self, classifier, feature_specs, prepare=True):
@@ -79,14 +79,16 @@ class AntiClassifier(object):
         # fit the anticlassifier
         self.anticlassifier.fit(self.xtrain, self.ytrain)
 
+        # used to periodically update / retrain the anticlassifier
+        self.new_rows = pd.DataFrame(columns=self.xtrain.columns)
+
     def _retrain(self):
         """Retrain the anticlassifier using the guesses that it generated"""
-        x = pd.DataFrame(self.new_rows)
-        y = self.classifier.predict(x)
-        self.xtrain = self.xtrain.append(x, ignore_index=True)
-        self.ytrain = self.ytrain.append(y, ignore_index=True)
+        y = self.classifier.predict(self.new_rows)
+        self.xtrain = pd.concat([self.xtrain, self.new_rows])
+        self.ytrain = np.append(self.ytrain, y)
         self.anticlassifier.fit(self.xtrain, self.ytrain)
-        self.new_rows = []
+        self.new_rows = pd.DataFrame(columns=self.xtrain.columns)
 
     def _lg_coefs(self):
         """Get the coefficients of the logisitical regression classifier used
@@ -153,7 +155,7 @@ class AntiClassifier(object):
             constraints=constraints,
             tol=0.001
         )
-        return self._transform.inverse_transform(result.x)
+        return self._transform.inverse_transform(result.x)[0]
 
     def _guess(self, constraints):
         """Take an initial guess at the a feature vector under constraints"""
@@ -171,7 +173,7 @@ class AntiClassifier(object):
         Also retrain the anticlassifier if enough feature vectors have been
         generated."""
         v = self._minimize(constraints)
-        self.new_rows.append(v)
+        self.new_rows.loc[len(self.new_rows) + 1] = v
         if len(self.new_rows) >= self.retrain_interval:
             self._retrain()
         return v
