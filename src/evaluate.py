@@ -55,13 +55,12 @@ def anticlassifier_precision(classifier, feature_specs, constraints, x, y):
     return precision, record
 
 
-def evaluate(classifier):
-    """Evaluate the performance of the anticlassifier against the give
+def evaluate(classifier, constrain="max"):
+    """Evaluate the performance of the anticlassifier against the given
     classifier.
     """
     classifier.fit(xtrain, ytrain)
     score = classifier.score(xtest, ytest)
-    logbook.info("classifier score: {0}".format(score))
 
     df = pd.DataFrame(
         columns=["significant_features_constrained", "anticlassifier_score"])
@@ -80,13 +79,24 @@ def evaluate(classifier):
         spec = [f for f in feature_specs if f["name"] == sig["name"]]
         assert len(spec) == 1
         spec = spec[0]
+
+        if constrain == "max":
+            constraint_value = int(spec["max"])
+        elif constrain == "min":
+            constraint_value = int(spec["min"])
+        elif constrain == "mid":
+            constraint_value = int((spec["min"] + spec["max"]) / 2)
+        else:
+            raise ValueError("constrain but but one of min, max, mid")
+
         constraint = create_greater_than_constraint(
             xtrain,
             sig["name"],
             sig["index"],
-            int(spec["max"]),
-            int(spec["max"])
+            constraint_value,
+            constraint_value
         )
+
         constraints.append(constraint)
         precision, record = anticlassifier_precision(
             classifier, feature_specs, constraints, xtest, ytest
