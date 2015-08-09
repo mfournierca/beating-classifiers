@@ -75,6 +75,20 @@ class AntiClassifier(object):
             for i in range(num_points)
         ]
 
+        # add some extreme vectors to the training set
+        rows.append(
+            {
+                c["name"]: c["type"](c["max"])
+                for c in self.feature_specs
+            }
+        )
+        rows.append(
+            {
+                c["name"]: c["type"](c["min"])
+                for c in self.feature_specs
+            }
+        )
+
         # self.xtrain is stored and will grow with the number of predictions
         # the anticlassifier makes, see self.get() and self.retrain()
         self.xtrain = pd.DataFrame(rows)
