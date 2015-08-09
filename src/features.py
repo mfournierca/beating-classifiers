@@ -56,7 +56,7 @@ def create_greater_than_constraint(
 
     http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
     """
-    assert x[column_index] == column_name
+    assert x.columns[column_index] == column_name
     return {
         "name": "{0}_gt_{1}".format(column_name, greater_than),
         "type": "ineq",

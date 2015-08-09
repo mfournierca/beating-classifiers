@@ -1,7 +1,6 @@
 import logbook
 import pandas as pd
-from copy import deepcopy
-from src import classifier, anticlassifier, features
+from src import classifier, anticlassifier
 from src.features import xtrain, ytrain, xtest, ytest, SPAMBASE_FEATURE_SPECS
 
 from sklearn.feature_selection import f_classif
@@ -30,14 +29,14 @@ def most_significant_features(x, y, limit=10):
 
 
 def anticlassifier_precision(classifier, feature_specs, constraints, x, y):
-    anti = anticlassifier.AntiClassifier(classifier, features)
+    anti = anticlassifier.AntiClassifier(classifier, feature_specs)
     record = pd.DataFrame(
         columns=[i["name"] for i in feature_specs] + ["classifier_predict"]
     )
     for i in range(N):
         f = anti.get(constraints)
         p = classifier.predict(f)
-        record.append(f + [p])
+        record.loc[len(record) + 1] = list(f) + [p]
 
     precision = (
         float(sum(record["classifier_predict"])) /
@@ -55,15 +54,16 @@ def evaluate(classifier):
     logbook.info("classifier score: {0}".format(score))
 
     df = pd.DataFrame(
-        colums=["significant_features_restricted", "precision"])
+        columns=["significant_features_restricted", "precision"])
     constraints = []
 
     # base case
     p, r = anticlassifier_precision(
         classifier, SPAMBASE_FEATURE_SPECS, constraints, xtest, ytest
     )
-    df.append([0, p])
+    df.loc[len(df) + 1] = [0, p]
 
+    # constrain each of the significant features and test classifier precision
     significant = most_significant_features(xtest, ytest)
     for name in significant:
         pass
