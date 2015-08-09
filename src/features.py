@@ -2,6 +2,25 @@ import numpy as np
 from random import randint
 from src import data
 
+xtrain, xtest, ytrain, ytest = data.load_spambase_test_train()
+
+
+# In the final version of this module we shouldn't be tightly coupled to the
+# features of the classifier that we are attacking. The decoupling would
+# require an invertible mapping between feature vectors and objects (e.g. email
+# messages) which would make matching feature column names and order
+# irrelevant. We don't have that mapping yet so we rely on our features
+# having the same order and names as the classifier we attack.
+SPAMBASE_FEATURE_SPECS = [
+    {
+        "name": c,
+        "type": int if type(xtrain[c].ix[0]) == np.int64 else float,
+        "max": max(xtrain[c]),
+        "min": min(xtrain[c])
+    }
+    for c in xtrain.columns if c != "spam"
+]
+
 
 def create_greater_than_constraint(
         x,
@@ -46,23 +65,6 @@ def create_greater_than_constraint(
             column_index, randint(greater_than, upper_bound))
     }
 
-
-# In the final version of this module we shouldn't be tightly coupled to the
-# features of the classifier that we are attacking. The decoupling would
-# require an invertible mapping between feature vectors and objects (e.g. email
-# messages) which would make matching feature column names and order
-# irrelevant. We don't have that mapping yet so we rely on our features
-# having the same order and names as the classifier we attack.
-xtrain, xtest, ytrain, test = data.load_spambase_test_train()
-SPAMBASE_FEATURE_SPECS = [
-    {
-        "name": c,
-        "type": int if type(xtrain[c].ix[0]) == np.int64 else float,
-        "max": max(xtrain[c]),
-        "min": min(xtrain[c])
-    }
-    for c in xtrain.columns if c != "spam"
-]
 
 # the constraints to pass onto the minimizer.
 # depend on the order of the feature specs

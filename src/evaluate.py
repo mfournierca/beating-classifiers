@@ -1,7 +1,9 @@
 import logbook
 import pandas as pd
 from copy import deepcopy
-from src import data, classifier, anticlassifier, features
+from src import classifier, anticlassifier, features
+from src.features import xtrain, ytrain, xtest, ytest, SPAMBASE_FEATURE_SPECS
+
 from sklearn.feature_selection import f_classif
 
 MODELS = [
@@ -24,17 +26,16 @@ def most_significant_features(x, y, limit=10):
     sig.sort(key=lambda x: x[1])
     sig = sig[:limit]
     columns = x.columns
-    return [columns[x[0]] for x in sig]
+    return [(x[0], columns[x[0]]) for x in sig]
 
 
-def anticlassifier_precision(classifier, features, x, y):
+def anticlassifier_precision(classifier, feature_specs, constraints, x, y):
     anti = anticlassifier.AntiClassifier(classifier, features)
     record = pd.DataFrame(
-        columns=[i["name"] for i in features.SPAMBASE_FEATURE_SPECS] +
-                ["classifier_predict"]
+        columns=[i["name"] for i in feature_specs] + ["classifier_predict"]
     )
     for i in range(N):
-        f = anti.get(features.SPAMBASE_CONSTRAINTS)
+        f = anti.get(constraints)
         p = classifier.predict(f)
         record.append(f + [p])
 
@@ -49,21 +50,23 @@ def evaluate(classifier):
     """Evaluate the performance of the anticlassifier against the give
     classifier.
     """
-    xtrain, xtest, ytrain, ytest = data.load_spambase_test_train()
     classifier.fit(xtrain, ytrain)
     score = classifier.score(xtest, ytest)
     logbook.info("classifier score: {0}".format(score))
 
     df = pd.DataFrame(
         colums=["significant_features_restricted", "precision"])
-    feature_specs = deepcopy(features.SPAMBASE_FEATURE_SPECS)
-    constraints = features.SPAMBASE_CONSTRAINTS
+    constraints = []
 
     # base case
-    p, r = anticlassifier_precision(classifier, feature_specs, xtest, ytest)
+    p, r = anticlassifier_precision(
+        classifier, SPAMBASE_FEATURE_SPECS, constraints, xtest, ytest
+    )
     df.append([0, p])
 
     significant = most_significant_features(xtest, ytest)
     for name in significant:
         pass
 
+    df["classifier_score"] = pd.Series(score)
+    return df
