@@ -57,6 +57,7 @@ def evaluate(classifier):
     df = pd.DataFrame(
         colums=["significant_features_restricted", "precision"])
     feature_specs = deepcopy(features.SPAMBASE_FEATURE_SPECS)
+    constraints = features.SPAMBASE_CONSTRAINTS
 
     # base case
     p, r = anticlassifier_precision(classifier, feature_specs, xtest, ytest)
@@ -65,5 +66,4 @@ def evaluate(classifier):
     significant = most_significant_features(xtest, ytest)
     for name in significant:
         pass
-
 
