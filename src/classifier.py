@@ -1,5 +1,5 @@
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.naive_bayes import GaussianNB
 
 from sklearn.pipeline import Pipeline, FeatureUnion
@@ -30,6 +30,6 @@ def svm():
     return Pipeline(
         steps=[
             ("transform", TRANSFORM),
-            ("svm", SVC())
+            ("svm", LinearSVC())
         ]
     )
